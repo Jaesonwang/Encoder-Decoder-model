@@ -1,3 +1,5 @@
+#Test with various hexdecimal inputs
+
 import torch
 from model import Transformer, PositionalEncoding  # Adjust imports based on your actual module structure
 from tokenizer import hex_encode, dec_encode, hex_pad_sequence, decode  # Assuming these are your encoding and padding functions
