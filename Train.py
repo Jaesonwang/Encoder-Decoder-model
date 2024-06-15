@@ -46,8 +46,8 @@ def train():
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     # Model initialization
-    input_dim = len(char_to_index)  # Assuming char_to_index is a dictionary mapping characters to indices
-    output_dim = len(char_to_index)  # Assuming the same vocabulary size for input and output
+    input_dim = len(char_to_index)  #char_to_index is a dictionary mapping characters to indices
+    output_dim = len(char_to_index)
     
     #print(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
     model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
@@ -62,7 +62,7 @@ def train():
         for i, (inputs, targets) in enumerate(dataloader):
             
             optimizer.zero_grad()
-            src_mask = None  # You may need to define a mask if needed
+            src_mask = None  # May need to define a mask if needed
             
             # Forward pass
             
@@ -74,19 +74,19 @@ def train():
             optimizer.step()
             
             running_loss += loss.item()
-            if (i + 1) % 100 == 0:
+            if (i + 1) % 100 == 0: 
                 print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(dataloader)}], Loss: {running_loss/100:.4f}')
                 running_loss = 0.0
 
 
         print(f'Loss = {running_loss}')
        
-        # Validation and Checkpointing can be added here
+        # Might need Validation and Checkpointing
     
     # Save trained model
     print('Finished Training')
     torch.save(model.state_dict(), 'transformer_model.pth')
 
-if __name__ == "__main__":
+if __name__ == "__main__": #For running the train.py file
     train()
 
