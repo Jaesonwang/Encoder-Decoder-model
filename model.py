@@ -159,7 +159,7 @@ class ProjectionLayer(nn.Module):
 
 class Transformer(nn.Module):
     
-    def __init__(self, seq_length, src_vocab_size, tgt_vocab_size, d_model, nhead, num_encoder_layers: int, dropout=0.1):
+    def __init__(self, seq_length, src_vocab_size, tgt_vocab_size, d_model, nheads, num_encoder_layers: int, dropout=0.1):
         super().__init__()
         self.src_embedding = InputEmbedding(d_model, src_vocab_size)
         self.tgt_embedding = InputEmbedding(d_model, tgt_vocab_size)
@@ -168,7 +168,7 @@ class Transformer(nn.Module):
 
         self.encoder = Encoder([
             EncoderBlock(
-                MultiHeadAttentionBlock(d_model, nhead, dropout),
+                MultiHeadAttentionBlock(d_model, nheads, dropout),
                 FeedforwardNetwork(d_model, d_model * 4, dropout),
                 dropout
             ) for _ in range(num_encoder_layers)
@@ -186,6 +186,7 @@ class Transformer(nn.Module):
         self.projection_layer.proj.bias.data.zero_()
 
     def forward(self, src, src_mask):
+        
         src = self.src_embedding(src)
         src = self.pos_encoder(src)
         output = self.encoder(src, src_mask)

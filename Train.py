@@ -3,17 +3,16 @@ import torch.nn as nn
 import pandas as pd
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
-from tokenizer import encode, pad_sequence
 from model import Transformer, PositionalEncoding
-from tokenizer import encode, pad_sequence, char_to_index
+from tokenizer import hex_encode, dec_encode, hex_pad_sequence,  dec_pad_sequence, hex_char_to_index, dec_index_to_char
 
 # Parameters
-seq_length = 10  # Sequence length (assuming the length of padded sequences)
+seq_length = 15  # Sequence length (assuming the length of padded sequences)
 d_model = 512    # Model dimensionality
 num_layers = 6   # Number of encoder layers
 num_heads = 8    # Number of attention heads
 dropout = 0.1    # Dropout rate
-max_length = 10  # Maximum length for padding sequences
+max_length = 15  # Maximum length for padding sequences
 batch_size = 32  # Batch size
 num_epochs = 20  # Number of epochs
 learning_rate = 1e-3  # Learning rate
@@ -31,11 +30,11 @@ class HexDecDataset(Dataset):
         hex_str = self.data.iloc[idx, 0]
         dec_str = self.data.iloc[idx, 1]
         
-        hex_encoded = encode(hex_str)  # Function to encode hexadecimal string
-        dec_encoded = encode(dec_str)  # Function to encode decimal string
+        hex_encoded = hex_encode(hex_str)  # Function to encode hexadecimal string
+        dec_encoded = dec_encode(dec_str)  # Function to encode decimal string
         
-        hex_padded = pad_sequence(hex_encoded, self.max_length)  # Function to pad sequence
-        dec_padded = pad_sequence(dec_encoded, self.max_length)  # Function to pad sequence
+        hex_padded = hex_pad_sequence(hex_encoded, self.max_length)  # Function to pad sequence
+        dec_padded = dec_pad_sequence(dec_encoded, self.max_length)  # Function to pad sequence
         
         return torch.tensor(hex_padded), torch.tensor(dec_padded)
 
@@ -46,10 +45,11 @@ def train():
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     
     # Model initialization
-    input_dim = len(char_to_index)  #char_to_index is a dictionary mapping characters to indices
-    output_dim = len(char_to_index)
+    input_dim = len(hex_char_to_index)  #char_to_index is a dictionary mapping characters to indices
+    output_dim = len(dec_index_to_char)
     
     #print(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
+    
     model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -68,8 +68,11 @@ def train():
             
             outputs = model(inputs, src_mask)
             
+            
             # Calculate loss
-            loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))  # Flatten for CrossEntropyLoss
+            loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
+            
+
             loss.backward()
             optimizer.step()
             

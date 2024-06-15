@@ -3,33 +3,41 @@ import torch
 import torch.nn as nn
 
 
-hex_vocab = '0123456789ABCDEF'
-dec_vocab = '0123456789'
-
-vocab = sorted(set(dec_vocab + hex_vocab))
-
-vocab.append('<PAD>')
-
-char_to_index = {char: idx for idx, char in enumerate(vocab)}
-index_to_char = {idx: char for idx, char in enumerate(vocab)}
+# Hexadecimal characters
+hex_chars = '0123456789ABCDEF'
+hex_vocab = sorted(set(hex_chars))
+hex_vocab.append('<PAD>')
+hex_char_to_index = {char: idx for idx, char in enumerate(hex_vocab)}
+hex_index_to_char = {idx: char for idx, char in enumerate(hex_vocab)}
 
 
-# def encode(input_string):
-#     return [char_to_index.get(char, char_to_index['<PAD>']) for char in input_string]
+# Decimal characters
+dec_chars = '0123456789'
+dec_vocab = sorted(set(dec_chars))
+dec_vocab.append('<PAD>')
+dec_char_to_index = {char: idx for idx, char in enumerate(dec_vocab)}
+dec_index_to_char = {idx: char for idx, char in enumerate(dec_vocab)}
 
-def encode(input_string):
-    if isinstance(input_string, str):
-        return [char_to_index.get(char, char_to_index['<PAD>']) for char in input_string]
-    elif isinstance(input_string, int):
-        input_string = str(input_string)  # Convert int to string
-        return [char_to_index.get(char, char_to_index['<PAD>']) for char in input_string]
-    else:
-        raise TypeError("Input should be a string or integer.")
 
-def decode(input_indicies):
-    return ''.join([index_to_char[idx] for idx in input_indicies])
+def hex_encode(input_string):
+    return [hex_char_to_index[char] for char in input_string]
 
-def pad_sequence(sequence, max_length, padding_value='<PAD>'):
+def dec_encode(input_string):
+    return [dec_char_to_index[char] for char in input_string]
+
+# def decode(input_indicies):
+#     return ''.join([dec_index_to_char[idx] for idx in input_indicies])
+
+def hex_pad_sequence(sequence, max_length, padding_value='<PAD>'):
     padding_length = max_length - len(sequence)
-    return sequence + [char_to_index[padding_value]] * padding_length
+    return sequence + [hex_char_to_index[padding_value]] * padding_length
 
+def dec_pad_sequence(sequence, max_length, padding_value='<PAD>'):
+    padding_length = max_length - len(sequence)
+    return sequence + [dec_char_to_index[padding_value]] * padding_length
+
+def decode(output_tensor):
+    probabilities = torch.softmax(output_tensor, dim=-1)  # Apply softmax along the last dimension
+    _, predicted_indices = torch.max(probabilities, dim=-1)  # Get the index of the maximum probability
+    predicted_indices = predicted_indices.squeeze().tolist()  # Convert to list of indices
+    return ''.join([dec_index_to_char[idx] for idx in predicted_indices])
