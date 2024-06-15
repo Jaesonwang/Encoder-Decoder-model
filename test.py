@@ -9,10 +9,10 @@ def main():
     max_length = 15
     # Load the trained model
     model = Transformer(seq_length = 15, src_vocab_size = 17, tgt_vocab_size = 11, d_model = 512, nheads = 8, num_encoder_layers = 6, dropout = 0.1)
-    model.load_state_dict(torch.load('transformer_model.pth'))
+    model.load_state_dict(torch.load('transformer_model.pth')) #load weights
     model.eval()  # Set model to evaluation mode
 
-    # Example input (replace with your own input generation logic)
+    # Example input 
     example_input = "1A3F"  # Example hexadecimal input
     encoded_input = hex_encode(example_input)
     padded_input = hex_pad_sequence(encoded_input, max_length)
