@@ -52,7 +52,6 @@ def train():
     trainDataloader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True)
     valDataloader = DataLoader(valDataset, batch_size=batch_size, shuffle=False)
     testDataloader = DataLoader(testDataset, batch_size=batch_size, shuffle=False)
-    
 
     # Model initialization
     input_dim = len(hex_char_to_index)  #char_to_index is a dictionary mapping characters to indices
@@ -87,23 +86,42 @@ def train():
             optimizer.step()
             
             running_loss += loss.item()
-            if (i + 1) % trainDataSize == 0: 
-                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(trainDataloader)}], Loss: {running_loss/trainDataSize:.4f}') #change 100 to num of inputs
+            if (i + 1) % 100 == 0:  # Print every 100 batches
+                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(trainDataloader)}], Loss: {running_loss/100:.4f}') 
                 running_loss = 0.0
 
 
-        print(f'Loss = {running_loss}')
-       
+        #print(f'Loss = {running_loss}')
+        epoch_loss = running_loss / len(trainDataloader)
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}')
 
     # Save trained model
     print('Finished Training')
     torch.save(model.state_dict(), 'transformer_model.pth')
 
-    #Add Validation
-    
-    #Add testing
 
-    #In a batch of 1000 data points, split (800,100,100)
+    # Validation
+    model.eval()
+    val_loss = 0.0
+    with torch.no_grad():
+        for inputs, targets in valDataloader:
+            src_mask = None
+            outputs = model(inputs, src_mask)
+            loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
+            val_loss += loss.item()
+
+    print(f'Validation Loss: {val_loss/len(valDataloader):.4f}')
+
+    # Testing
+    test_loss = 0.0
+    with torch.no_grad():
+        for inputs, targets in testDataloader:
+            src_mask = None
+            outputs = model(inputs, src_mask)
+            loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
+            test_loss += loss.item()
+
+    print(f'Test Loss: {test_loss/len(testDataloader):.4f}')
 
 if __name__ == "__main__": #For running the train.py file
     train()
