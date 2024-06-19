@@ -78,17 +78,22 @@ def train():
             
             running_loss += loss.item()
             if (i + 1) % 100 == 0: 
-                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(dataloader)}], Loss: {running_loss/100:.4f}')
+                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(dataloader)}], Loss: {running_loss/100:.4f}') #change 100 to num of inputs
                 running_loss = 0.0
 
 
         print(f'Loss = {running_loss}')
        
-        # Might need Validation and Checkpointing
-    
+
     # Save trained model
     print('Finished Training')
     torch.save(model.state_dict(), 'transformer_model.pth')
+
+    #Add Validation
+    
+    #Add testing
+
+    #In a batch of 1000 data points, split (800,100,100)
 
 if __name__ == "__main__": #For running the train.py file
     train()

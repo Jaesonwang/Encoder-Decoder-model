@@ -38,3 +38,4 @@ def decode(output_tensor): #Mock decoder function for testing
     _, predicted_indices = torch.max(probabilities, dim=-1) 
     predicted_indices = predicted_indices.squeeze().tolist()  
     return ''.join([dec_index_to_char[idx] for idx in predicted_indices])
+
