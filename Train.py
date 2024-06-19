@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import pandas as pd
 import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 from model import Transformer, PositionalEncoding
 from tokenizer import hex_encode, dec_encode, hex_pad_sequence,  dec_pad_sequence, hex_char_to_index, dec_index_to_char
 
@@ -38,12 +38,22 @@ class HexDecDataset(Dataset):
         
         return torch.tensor(hex_padded), torch.tensor(dec_padded)
 
+
 # Training function
 def train():
     # Load dataset
     dataset = HexDecDataset('data.csv', max_length)
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    trainDataSize = int(0.8 * len(dataset))
+    valDataSize = int(0.1 * len(dataset))
+    testDataSize = int(0.1 * len(dataset))
+
+    trainDataset, valDataset, testDataset = random_split(dataset, [trainDataSize, valDataSize, testDataSize])
+
+    trainDataloader = DataLoader(trainDataset, batch_size=batch_size, shuffle=True)
+    valDataloader = DataLoader(valDataset, batch_size=batch_size, shuffle=False)
+    testDataloader = DataLoader(testDataset, batch_size=batch_size, shuffle=False)
     
+
     # Model initialization
     input_dim = len(hex_char_to_index)  #char_to_index is a dictionary mapping characters to indices
     output_dim = len(dec_index_to_char)
@@ -59,7 +69,7 @@ def train():
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
-        for i, (inputs, targets) in enumerate(dataloader):
+        for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
             src_mask = None  # May need to define a mask if needed
@@ -77,8 +87,8 @@ def train():
             optimizer.step()
             
             running_loss += loss.item()
-            if (i + 1) % 100 == 0: 
-                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(dataloader)}], Loss: {running_loss/100:.4f}') #change 100 to num of inputs
+            if (i + 1) % trainDataSize == 0: 
+                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(trainDataloader)}], Loss: {running_loss/trainDataSize:.4f}') #change 100 to num of inputs
                 running_loss = 0.0
 
 
