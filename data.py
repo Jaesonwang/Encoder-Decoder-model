@@ -1,3 +1,7 @@
+#File to generate data for the encoder
+#Can modify number of data inputs
+#Currently set to 1000 but should be increased to around 8000 for good results
+
 import numpy
 import random as random
 import csv

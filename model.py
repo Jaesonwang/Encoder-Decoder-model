@@ -1,3 +1,6 @@
+#The model architecture of the encoder
+#Modelled based on the annotated attention is all you need paper
+
 import math
 from dataclasses import dataclass
 

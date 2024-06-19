@@ -1,3 +1,7 @@
+#Tokenizer file
+#Contains encoding functions to encode input and target sequences
+
+
 import pandas as pd
 import torch
 import torch.nn as nn

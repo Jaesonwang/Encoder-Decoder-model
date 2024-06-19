@@ -1,3 +1,9 @@
+#File containing Training loop, validation and testing phases
+#loss calculated is the cross entropy loss, will try to incorporate mean squared loss too
+#contains model parameters -- can be modified
+#data is split [training, validation, testing] == [80%, 10%, 10%]
+
+
 import torch
 import torch.nn as nn
 import pandas as pd
@@ -21,7 +27,7 @@ learning_rate = 1e-3  # Learning rate
 class HexDecDataset(Dataset):
     def __init__(self, csv_file, max_length):
         self.data = pd.read_csv(csv_file, dtype=str)
-        self.max_length = max_length
+        self.max_length = max_length 
 
     def __len__(self):
         return len(self.data)
@@ -57,8 +63,6 @@ def train():
     input_dim = len(hex_char_to_index)  #char_to_index is a dictionary mapping characters to indices
     output_dim = len(dec_index_to_char)
     
-    #print(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
-    
     model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
@@ -71,17 +75,15 @@ def train():
         for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
-            src_mask = None  # May need to define a mask if needed
+            src_mask = None 
             
             # Forward pass
-            
             outputs = model(inputs, src_mask)
             
             
             # Calculate loss
             loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
             
-
             loss.backward()
             optimizer.step()
             
@@ -90,17 +92,15 @@ def train():
                 print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(trainDataloader)}], Loss: {running_loss/100:.4f}') 
                 running_loss = 0.0
 
-
-        #print(f'Loss = {running_loss}')
         epoch_loss = running_loss / len(trainDataloader)
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}')
+        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}') #print loss after each epoch 
 
     # Save trained model
     print('Finished Training')
     torch.save(model.state_dict(), 'transformer_model.pth')
 
 
-    # Validation
+    # Validation step
     model.eval()
     val_loss = 0.0
     with torch.no_grad():
@@ -112,7 +112,7 @@ def train():
 
     print(f'Validation Loss: {val_loss/len(valDataloader):.4f}')
 
-    # Testing
+    # Testing step
     test_loss = 0.0
     with torch.no_grad():
         for inputs, targets in testDataloader:
