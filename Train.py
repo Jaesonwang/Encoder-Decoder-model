@@ -9,7 +9,7 @@ import torch.nn as nn
 import pandas as pd
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
-from model import Transformer, PositionalEncoding
+from model import Transformer
 from tokenizer import hex_encode, dec_encode, hex_pad_sequence,  dec_pad_sequence, hex_char_to_index, dec_index_to_char
 
 # Parameters
@@ -68,6 +68,7 @@ def train():
     
     model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
     criterion = nn.CrossEntropyLoss()
+    criterion2 = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     
     # Training loop
@@ -75,6 +76,7 @@ def train():
     for epoch in range(num_epochs):
         model.train()
         running_loss = 0.0
+        runningLossMSE = 0.0
         for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
@@ -84,19 +86,25 @@ def train():
             outputs = model(inputs, src_mask)
             
             
-            # Calculate loss
-            loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
+            # Calculate cross entropy loss
+            outputCrossEntropy = outputs.view(-1, output_dim)
+            targetCrossEntropy = targets.contiguous().view(-1)
+            loss = criterion(outputCrossEntropy, targetCrossEntropy)
             
-            loss.backward()
-            optimizer.step()
+            #Calculate Mean sqaured Loss
+            outputs_mse = outputs.view(-1, output_dim)
+            targets_mse = nn.functional.one_hot(targets, num_classes=output_dim).float().view(-1, output_dim)
+            lossMSE = criterion2(outputs_mse, targets_mse)
+
+            loss.backward() #Computes the gradient of the loss with respect to the model parameters.
+            optimizer.step() #Updated the model parameters using the computed gradients 
             
-            running_loss += loss.item()
-            if (i + 1) % 100 == 0:  # Print every 100 batches
-                print(f'Epoch [{epoch+1}/{num_epochs}], Step [{i+1}/{len(trainDataloader)}], Loss: {running_loss/100:.4f}') 
-                running_loss = 0.0
+            running_loss += loss.item() 
+            runningLossMSE += lossMSE.item()
 
         epoch_loss = running_loss / len(trainDataloader)
-        print(f'Epoch [{epoch+1}/{num_epochs}], Loss: {epoch_loss:.4f}') #print loss after each epoch 
+        epochLossMSE = runningLossMSE / len(trainDataloader)
+        print(f'Epoch {epoch+1}: Cross Entropy Loss = {epoch_loss:.4f}, MSE = {epochLossMSE:.4f}') #print loss after each epoch 
 
     # Save trained model
     print('Finished Training')
