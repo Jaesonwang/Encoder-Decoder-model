@@ -36,6 +36,9 @@ class HexDecDataset(Dataset):
         hex_str = self.data.iloc[idx, 0]
         dec_str = self.data.iloc[idx, 1]
         
+        hex_str = hex_str.replace('0x','')  #Removing prefix from hexadecimal number
+        dec_str = dec_str.replace(',','')   #Removing commas from decimal number 
+        
         hex_encoded = hex_encode(hex_str)  # Function to encode hexadecimal string
         dec_encoded = dec_encode(dec_str)  # Function to encode decimal string
         

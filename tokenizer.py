@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 
 
-# Hexadecimal characters
+# Hexadecimal characters 
 hex_chars = '0123456789ABCDEF'
 hex_vocab = sorted(set(hex_chars))
 hex_vocab.append('<PAD>')

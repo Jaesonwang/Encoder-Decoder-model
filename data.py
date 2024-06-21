@@ -13,10 +13,10 @@ def generate_data(num_samples):    #generate data for encoder
     for _ in range(num_samples):   #create num_samples amount of data
         hex_num = ''.join(random.choices(hex_chars, k=random.randint(1, 8)))  # generate random hexadecimal values that range from 1-8 digits
         dec_num = int(hex_num, 16) # convert to decimal value
-        #dec_num = format(dec_num, ',')  # --- include to add commas for better clarity for decimal values
+        dec_num = format(dec_num, ',')  # --- include to add commas for better clarity for decimal values
         dec_num = str(dec_num)  # convert to decimal value to string
         #dec_num = f"{dec_num:,}" 
-        #hex_num = '0x' + hex_num   #add 0x prefix in front of hexadecimals 
+        hex_num = '0x' + hex_num   #add 0x prefix in front of hexadecimals 
         data.append((hex_num, dec_num))  #add to array 
         
         #add a text normalization to remove comma and 0x during training/convert to lowercase
