@@ -75,8 +75,8 @@ def train():
     
     for epoch in range(num_epochs):
         model.train()
-        running_loss = 0.0
-        runningLossMSE = 0.0
+        running_loss_CE = 0.0
+        running_loss_MSE = 0.0
         for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
@@ -87,24 +87,24 @@ def train():
             
             
             # Calculate cross entropy loss
-            outputCrossEntropy = outputs.view(-1, output_dim)
-            targetCrossEntropy = targets.contiguous().view(-1)
-            loss = criterion(outputCrossEntropy, targetCrossEntropy)
+            outputs_CE = outputs.view(-1, output_dim)
+            targets_CE = targets.contiguous().view(-1)
+            loss_CE = criterion(outputs_CE, targets_CE)
             
             #Calculate Mean sqaured Loss
             outputs_mse = outputs.view(-1, output_dim)
             targets_mse = nn.functional.one_hot(targets, num_classes=output_dim).float().view(-1, output_dim)
-            lossMSE = criterion2(outputs_mse, targets_mse)
+            loss_MSE = criterion2(outputs_mse, targets_mse)
 
-            loss.backward() #Computes the gradient of the loss with respect to the model parameters.
+            loss_CE.backward() #Computes the gradient of the loss with respect to the model parameters.
             optimizer.step() #Updated the model parameters using the computed gradients 
             
-            running_loss += loss.item() 
-            runningLossMSE += lossMSE.item()
+            running_loss_CE += loss_CE.item() 
+            running_loss_MSE += loss_MSE.item()
 
-        epoch_loss = running_loss / len(trainDataloader)
-        epochLossMSE = runningLossMSE / len(trainDataloader)
-        print(f'Epoch {epoch+1}: Cross Entropy Loss = {epoch_loss:.4f}, MSE = {epochLossMSE:.4f}') #print loss after each epoch 
+        epoch_loss_CE = running_loss_CE / len(trainDataloader)
+        epoch_loss_MSE = running_loss_MSE / len(trainDataloader)
+        print(f'Epoch {epoch+1}: Cross Entropy Loss = {epoch_loss_CE:.4f}, MSE = {epoch_loss_MSE:.4f}') #print loss after each epoch 
 
     # Save trained model
     print('Finished Training')
