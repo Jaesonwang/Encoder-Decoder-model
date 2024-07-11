@@ -40,21 +40,3 @@ def hex_pad_sequence(sequence, max_length, padding_value='<PAD>', SOS_value = '<
 def dec_pad_sequence(sequence, max_length, padding_value='<PAD>', SOS_value = '<SOS>', EOS_value = '<EOS>'):
     padding_length = max_length - len(sequence) -  2
     return [dec_char_to_index[SOS_value]] + sequence + [dec_char_to_index[EOS_value]] + [dec_char_to_index[padding_value]] * padding_length
-
-encoded_hex = hex_encode("ABCDE")
-padded_hex = hex_pad_sequence(encoded_hex, 15)
-print(padded_hex)
-
-encoded_hex = hex_encode("29433")
-padded_hex = hex_pad_sequence(encoded_hex, 15)
-print(padded_hex)
-
-encoded_hex = hex_encode("A5")
-padded_hex = hex_pad_sequence(encoded_hex, 15)
-print(padded_hex)
-
-encoded_hex = hex_encode("A56743434")
-padded_hex = hex_pad_sequence(encoded_hex, 15)
-print(padded_hex)
-
-

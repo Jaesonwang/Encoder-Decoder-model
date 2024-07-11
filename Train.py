@@ -65,12 +65,18 @@ def train():
     # Model initialization
     input_dim = len(hex_char_to_index)  #char_to_index is a dictionary mapping characters to indices
     output_dim = len(dec_index_to_char)
+    padding_idx = hex_char_to_index['<PAD>']
     
     model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
-    criterion = nn.CrossEntropyLoss()
+    criterion = nn.CrossEntropyLoss(ignore_index=padding_idx, label_smoothing=0.1)
     criterion2 = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     
+    #create a src mask for input sequences
+    def create_src_mask(src, pad_idx):
+        src_mask = (src != pad_idx).unsqueeze(1).unsqueeze(2)  # (batch_size, 1, 1, seq_len)
+        return src_mask
+
     # Training loop
     
     for epoch in range(num_epochs):
@@ -80,11 +86,10 @@ def train():
         for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
-            src_mask = None 
-            
+            src_mask = create_src_mask(inputs, padding_idx)
+        
             # Forward pass
             outputs = model(inputs, src_mask)
-            
             
             # Calculate cross entropy loss
             outputs_CE = outputs.view(-1, output_dim)
