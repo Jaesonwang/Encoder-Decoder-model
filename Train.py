@@ -10,12 +10,13 @@ import pandas as pd
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
 from model import Transformer
-from tokenizer import hex_encode, dec_encode, hex_pad_sequence,  dec_pad_sequence, hex_char_to_index, dec_index_to_char
+from tokenizer import hex_encode, dec_encode, hex_pad_sequence,  dec_pad_sequence, hex_char_to_index, dec_index_to_char, dec_char_to_index
 
 # Parameters
 seq_length = 15  # Sequence length (assuming the length of padded sequences)
 d_model = 512    # Model dimensionality
-num_layers = 6   # Number of encoder layers
+num_encoder_layers = 6   # Number of encoder layers
+num_decoder_layers = 6   # Number of decoder layers
 num_heads = 8    # Number of attention heads
 dropout = 0.1    # Dropout rate
 max_length = 15  # Maximum length for padding sequences
@@ -65,17 +66,23 @@ def train():
     # Model initialization
     input_dim = len(hex_char_to_index)  #char_to_index is a dictionary mapping characters to indices
     output_dim = len(dec_index_to_char)
-    padding_idx = hex_char_to_index['<PAD>']
+    src_padding_idx = hex_char_to_index['<PAD>']
+    tgt_padding_idx = dec_char_to_index['<PAD>']
     
-    model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_layers, dropout)
-    criterion = nn.CrossEntropyLoss(ignore_index=padding_idx, label_smoothing=0.1)
+    model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout)
+    criterion = nn.CrossEntropyLoss(ignore_index=src_padding_idx, label_smoothing=0.1)
     criterion2 = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     
     #create a src mask for input sequences
-    def create_src_mask(src, pad_idx):
-        src_mask = (src != pad_idx).unsqueeze(1).unsqueeze(2)  # (batch_size, 1, 1, seq_len)
-        return src_mask
+    def create_src_mask(src, tgt,  src_padding_idx, tgt_padding_idx):
+        #src_mask = (src != src_padding_idx).unsqueeze(1).unsqueeze(2)  # (batch_size, 1, 1, seq_len)
+        src_mask = (src != src_padding_idx).unsqueeze(-2)
+        tgt_mask = (tgt != tgt_padding_idx).unsqueeze(-2)
+        size = tgt.size(1)
+        nopeak_mask = torch.triu(torch.ones((1, size, size)), diagonal=1).type_as(tgt_mask)
+        tgt_mask = tgt_mask & (nopeak_mask == 0)
+        return src_mask, tgt_mask
 
     # Training loop
     
@@ -86,10 +93,10 @@ def train():
         for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
-            src_mask = create_src_mask(inputs, padding_idx)
-        
+            src_mask, tgt_mask = create_src_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
+
             # Forward pass
-            outputs = model(inputs, src_mask)
+            outputs = model(inputs, targets, src_mask, tgt_mask)
             
             # Calculate cross entropy loss
             outputs_CE = outputs.view(-1, output_dim)
@@ -120,8 +127,8 @@ def train():
     val_loss = 0.0
     with torch.no_grad():
         for inputs, targets in valDataloader:
-            src_mask = None
-            outputs = model(inputs, src_mask)
+            src_mask, tgt_mask = create_src_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
+            outputs = model(inputs, targets, src_mask, tgt_mask)
             loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
             val_loss += loss.item()
 
@@ -131,8 +138,8 @@ def train():
     test_loss = 0.0
     with torch.no_grad():
         for inputs, targets in testDataloader:
-            src_mask = None
-            outputs = model(inputs, src_mask)
+            src_mask, tgt_mask = create_src_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
+            outputs = model(inputs, targets, src_mask, tgt_mask)
             loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
             test_loss += loss.item()
 
