@@ -92,9 +92,9 @@ def train():
             loss_CE = criterion(outputs_CE, targets_CE)
             
             #Calculate Mean sqaured Loss
-            outputs_mse = outputs.view(-1, output_dim)
-            targets_mse = nn.functional.one_hot(targets, num_classes=output_dim).float().view(-1, output_dim)
-            loss_MSE = criterion2(outputs_mse, targets_mse)
+            outputs_for_mse = outputs.view(-1, output_dim)
+            targets_for_mse = nn.functional.one_hot(targets, num_classes=output_dim).float().view(-1, output_dim)
+            loss_MSE = criterion2(outputs_for_mse, targets_for_mse)
 
             loss_CE.backward() #Computes the gradient of the loss with respect to the model parameters.
             optimizer.step() #Updated the model parameters using the computed gradients 
@@ -109,7 +109,6 @@ def train():
     # Save trained model
     print('Finished Training')
     torch.save(model.state_dict(), 'transformer_model.pth')
-
 
     # Validation step
     model.eval()

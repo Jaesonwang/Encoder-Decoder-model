@@ -1,0 +1,14 @@
+[tool.poetry]
+name = "encoder"
+version = "0.1.0"
+description = "Translates from Hexadecimal to decimal values"
+authors = ["Jaeson Wang <jaesonwang90@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
