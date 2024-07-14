@@ -70,7 +70,7 @@ def train():
     tgt_padding_idx = dec_char_to_index['<PAD>']
     
     model = Transformer(seq_length, input_dim, output_dim, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout)
-    criterion = nn.CrossEntropyLoss(ignore_index=src_padding_idx, label_smoothing=0.1)
+    criterion = nn.CrossEntropyLoss(ignore_index=tgt_padding_idx, label_smoothing=0.1)
     criterion2 = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     

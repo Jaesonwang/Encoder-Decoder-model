@@ -1,10 +1,10 @@
 import torch
 import torch.nn as nn
 from model import Transformer
-from Train import seq_length, d_model, num_heads, num_layers, dropout
+from Train import seq_length, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout
 from tokenizer import hex_encode, hex_pad_sequence, dec_index_to_char, dec_char_to_index
 
-model = Transformer(seq_length, 19, 13, d_model, num_heads, num_layers, dropout)
+model = Transformer(seq_length, 19, 13, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout)
 model.load_state_dict(torch.load('transformer_model.pth'))
 model.eval()
 
