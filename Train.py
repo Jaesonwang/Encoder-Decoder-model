@@ -75,7 +75,7 @@ def train():
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     
     #create a src mask for input sequences
-    def create_src_mask(src, tgt,  src_padding_idx, tgt_padding_idx):
+    def create_mask(src, tgt,  src_padding_idx, tgt_padding_idx):
         #src_mask = (src != src_padding_idx).unsqueeze(1).unsqueeze(2)  # (batch_size, 1, 1, seq_len)
         src_mask = (src != src_padding_idx).unsqueeze(-2)
         tgt_mask = (tgt != tgt_padding_idx).unsqueeze(-2)
@@ -93,7 +93,7 @@ def train():
         for i, (inputs, targets) in enumerate(trainDataloader):
             
             optimizer.zero_grad()
-            src_mask, tgt_mask = create_src_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
+            src_mask, tgt_mask = create_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
 
             # Forward pass
             outputs = model(inputs, targets, src_mask, tgt_mask)
@@ -127,7 +127,7 @@ def train():
     val_loss = 0.0
     with torch.no_grad():
         for inputs, targets in valDataloader:
-            src_mask, tgt_mask = create_src_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
+            src_mask, tgt_mask = create_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
             outputs = model(inputs, targets, src_mask, tgt_mask)
             loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
             val_loss += loss.item()
@@ -138,7 +138,7 @@ def train():
     test_loss = 0.0
     with torch.no_grad():
         for inputs, targets in testDataloader:
-            src_mask, tgt_mask = create_src_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
+            src_mask, tgt_mask = create_mask(inputs, targets, src_padding_idx, tgt_padding_idx)
             outputs = model(inputs, targets, src_mask, tgt_mask)
             loss = criterion(outputs.view(-1, output_dim), targets.contiguous().view(-1))
             test_loss += loss.item()
