@@ -1,51 +1,60 @@
-import torch
+import torch 
 import torch.nn as nn
+import secrets
 from model import Transformer
-from Train import seq_length, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout
-from tokenizer import hex_encode, hex_pad_sequence, dec_index_to_char, dec_char_to_index
+from Train import seq_length, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout, max_length
+from tokenizer import hex_encode, hex_pad_sequence, hex_char_to_index, dec_char_to_index, dec_index_to_char
 
+# Load model
 model = Transformer(seq_length, 19, 13, d_model, num_heads, num_encoder_layers, num_decoder_layers, dropout)
 model.load_state_dict(torch.load('transformer_model.pth'))
 model.eval()
 
-def translate_hex_to_dec(hex_input):
-    with torch.no_grad():
-        
-        hex_encoded = hex_encode(hex_input)
-        hex_padded = hex_pad_sequence(hex_encoded, seq_length)
-        print(hex_padded)
-        hex_tensor = torch.tensor(hex_padded).unsqueeze(0)  
-        
-        src_mask = None  
+# Function to generate random hexadecimal string
+def generate_random_hex(length):
+    rand_int = secrets.randbits(length * 4)       # Multiply by 4 to convert bytes to hex digits
+    hex_string = format(rand_int, f'0{length}x')  # Convert the integer to a hexadecimal string
+    hex_string = hex_string.upper()
+    return hex_string
 
-        outputs = model(hex_tensor, src_mask)
-        _, predicted_indices = torch.max(outputs, dim=-1)
+# Generate random hex string and prepare inputs
+random_hex = generate_random_hex(6)
+hex_encoded = hex_encode(random_hex)
+hex_padded = hex_pad_sequence(hex_encoded, max_length)
+input_tensor = torch.tensor([hex_padded])
 
-        predicted_decimal = []
-        for idx in predicted_indices.squeeze():
-            idx_item = idx.item()
-            if idx_item == dec_char_to_index['<PAD>']:  #stop translating when padding token is reached
-                break
-            predicted_decimal.append(dec_index_to_char[idx_item])
+# Padding indices
+src_padding_idx = hex_char_to_index['<PAD>']
+tgt_padding_idx = dec_char_to_index['<PAD>']
 
-        predicted_decimal = ''.join(predicted_decimal)
-        
-        predicted_decimal = format(int(predicted_decimal), ',')
-        hex_input = "0x" + hex_input
-        
+# Function to create masks
+def create_mask(src, tgt, src_padding_idx, tgt_padding_idx):
+    src_mask = (src != src_padding_idx).unsqueeze(-2)
+    tgt_mask = (tgt != tgt_padding_idx).unsqueeze(-2)
+    size = tgt.size(1)
+    nopeak_mask = torch.triu(torch.ones((1, size, size)), diagonal=1).type_as(tgt_mask)
+    tgt_mask = tgt_mask & (nopeak_mask == 0)
+    return src_mask, tgt_mask
 
-        print(f'Hexadecimal Input: {hex_input}')
-        print(f'Predicted Decimal Output: {predicted_decimal}')
-        hex_input = hex_input.replace('0x','')
-        # print(f'Expected Decimal Output: {format(int(hex_input, 16), ',')}')
-        print("------------------------------")
-    return predicted_decimal
+# Dummy targets for inference
+dummy_targets = torch.zeros((1, seq_length), dtype=torch.long)
 
-translate_hex_to_dec("1AB1212432121")
-translate_hex_to_dec("1")
-translate_hex_to_dec("2")
-translate_hex_to_dec("3")
-translate_hex_to_dec("4")
-translate_hex_to_dec("5")
-translate_hex_to_dec("6")
-translate_hex_to_dec("7")
+# Inference
+with torch.no_grad():
+    src_mask, tgt_mask = create_mask(input_tensor, dummy_targets, src_padding_idx, tgt_padding_idx)
+    print("src_mask:", src_mask)
+    print("tgt_mask:", tgt_mask)
+    outputs = model(input_tensor, dummy_targets, src_mask, tgt_mask)
+    print("outputs:", outputs)
+
+# Post-processing predictions
+_, predicted_indices = torch.max(outputs, dim=-1)
+print("predicted_indices:", predicted_indices)
+
+# Further decoding and printing results
+predicted_decoded = [dec_index_to_char[idx.item()] for idx in predicted_indices.squeeze()]
+translated_output = ''.join(predicted_decoded).strip('<PAD>')  # Remove padding tokens
+
+print(f"Input Hexadecimal: {random_hex}")
+print(f"Predicted Decimal: {translated_output}")
+

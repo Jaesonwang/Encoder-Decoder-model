@@ -9,20 +9,22 @@ import torch.nn as nn
 import pandas as pd
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader, random_split
+from torch.utils.tensorboard import SummaryWriter
 from model import Transformer
 from tokenizer import hex_encode, dec_encode, hex_pad_sequence,  dec_pad_sequence, hex_char_to_index, dec_index_to_char, dec_char_to_index
 
 # Parameters
 seq_length = 15  # Sequence length (assuming the length of padded sequences)
-d_model = 512    # Model dimensionality
-num_encoder_layers = 6   # Number of encoder layers
-num_decoder_layers = 6   # Number of decoder layers
-num_heads = 8    # Number of attention heads
+d_model = 128    # Model dimensionality
+num_encoder_layers = 4   # Number of encoder layers
+num_decoder_layers = 4   # Number of decoder layers
+num_heads = 4    # Number of attention heads
 dropout = 0.1    # Dropout rate
 max_length = 15  # Maximum length for padding sequences
-batch_size = 32  # Batch size
+batch_size = 12  # Batch size
 num_epochs = 20  # Number of epochs
 learning_rate = 1e-3  # Learning rate
+writer = SummaryWriter('logs')
 
 # Dataset class
 class HexDecDataset(Dataset):
@@ -109,6 +111,11 @@ def train():
             loss_MSE = criterion2(outputs_for_mse, targets_for_mse)
 
             loss_CE.backward() #Computes the gradient of the loss with respect to the model parameters.
+
+            if i == 0:
+                for name, param in model.named_parameters():
+                    writer.add_histogram(f'gradients/{name}', param.grad, epoch)
+                    
             optimizer.step() #Updated the model parameters using the computed gradients 
             
             running_loss_CE += loss_CE.item() 
