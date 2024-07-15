@@ -19,7 +19,6 @@ def generate_data(num_samples):    #generate data for encoder
         hex_num = '0x' + hex_num   #add 0x prefix in front of hexadecimals 
         data.append((hex_num, dec_num))  #add to array 
         
-        #add a text normalization to remove comma and 0x during training/convert to lowercase
     return data #return array
 
 def create_csv(data, filename = "data.csv"):    #create the csv file to store data
