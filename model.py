@@ -184,6 +184,15 @@ class Decoder(nn.Module):
             x = layer(x, encoder_output, src_mask, tgt_mask)
         return self.norm(x)
 
+class ProjectionLayer(nn.Module):
+
+    def __init__(self, d_model, vocab_size) -> None:
+        super().__init__()
+        self.proj = nn.Linear(d_model, vocab_size)
+
+    def forward(self, x) -> None:
+        return self.proj(x)
+
 class Transformer(nn.Module):
     def __init__(self, seq_length, src_vocab_size, tgt_vocab_size, d_model, nheads, num_encoder_layers, num_decoder_layers, dropout=0.1):
         super().__init__()
@@ -210,7 +219,7 @@ class Transformer(nn.Module):
             ) for _ in range(num_decoder_layers)
         ]))
 
-        self.projection_layer = nn.Linear(d_model, tgt_vocab_size)
+        self.projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
 
         self.init_weights()
 
@@ -218,8 +227,8 @@ class Transformer(nn.Module):
         initrange = 0.1
         self.src_embedding.embedding.weight.data.uniform_(-initrange, initrange)
         self.tgt_embedding.embedding.weight.data.uniform_(-initrange, initrange)
-        self.projection_layer.weight.data.uniform_(-initrange, initrange)
-        self.projection_layer.bias.data.zero_()
+        self.projection_layer.proj.weight.data.uniform_(-initrange, initrange)
+        self.projection_layer.proj.bias.data.zero_()
 
     def forward(self, src, tgt, src_mask, tgt_mask):
         src = self.src_embedding(src)
