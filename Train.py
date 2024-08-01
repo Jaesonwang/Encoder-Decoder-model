@@ -214,12 +214,10 @@ def run_training_loop(model, device, loss_fn, tgt_tokenizer, optimizer, num_step
 
         num_step += 1
 
-def greedy_decode(model, source, source_mask, tgt_tokenizer, device):
-    sos_idx = tgt_tokenizer._convert_token_to_id('<bos>')
-    eos_idx = tgt_tokenizer._convert_token_to_id('<eos>')
+def greedy_decode(model, source, source_mask, device, tgt_sos_token_id, tgt_eos_token_id):
 
     encoder_output = model.encode(source, source_mask)
-    decoder_input = torch.empty(1, 1).fill_(sos_idx).type_as(source).to(device)
+    decoder_input = torch.empty(1, 1).fill_(tgt_sos_token_id).type_as(source).to(device)
     step = 0
     
     while step < ModelConfig.max_length:
@@ -232,20 +230,24 @@ def greedy_decode(model, source, source_mask, tgt_tokenizer, device):
         _, next_word = torch.max(prob, dim=1)
         decoder_input = torch.cat([decoder_input, torch.empty(1, 1).type_as(source).fill_(next_word.item()).to(device)], dim=1)
 
-        if next_word.item() == eos_idx:
+        if next_word.item() == tgt_eos_token_id:
             break
 
         step += 1
 
     return decoder_input.squeeze(0)
 
-def validation_step(model, val_dataset, tgt_tokenizer, device, num_step, num_examples=2):
+def validation_step(model, val_dataset, tgt_tokenizer, device, num_step):
     model.eval()
+
+    sos_token_id = tgt_tokenizer._convert_token_to_id('<bos>')
+    eos_token_id = tgt_tokenizer._convert_token_to_id('<eos>')
 
     source = []
     expected = []
     predicted = []
     example_num = 0
+    num_examples = 2
 
     with torch.no_grad():
         for batch in val_dataset:
@@ -259,7 +261,7 @@ def validation_step(model, val_dataset, tgt_tokenizer, device, num_step, num_exa
             #Get decoded output from greedy decode
             encoder_input = batch["encoder_input"].to(device)
             encoder_mask = batch["encoder_mask"].to(device) 
-            model_out = greedy_decode(model, encoder_input, encoder_mask, tgt_tokenizer, device)
+            model_out = greedy_decode(model, encoder_input, encoder_mask, device, sos_token_id, eos_token_id)
             model_out_text = tgt_tokenizer.decode(model_out.detach().cpu().numpy(), skip_special_tokens=True)
             predicted.append(model_out_text)
             
@@ -311,6 +313,7 @@ def train():
     #tensorboard for logging
     writer = SummaryWriter(log_dir=ModelConfig.experiment_name)
     
+    #Epoch loop
     for epoch in range(initial_epoch, ModelConfig.num_epochs):
         torch.cuda.empty_cache()
         model.train()
