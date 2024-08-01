@@ -1,6 +1,5 @@
 #Tokenizer Class
 
-
 class CharTokenizer:
     def __init__(self, vocab=None):
         if vocab is None:
