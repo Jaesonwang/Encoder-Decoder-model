@@ -1,65 +1,48 @@
-#Tokenizer file
-#Contains encoding functions to encode input and target sequences
+#Tokenizer Class
 
 
-import pandas as pd
-import torch
-import torch.nn as nn
+class CharTokenizer:
+    def __init__(self, vocab=None):
+        if vocab is None:
+            vocab = ["<pad>", "<eos>", "<bos>", "<unk>"] + list("0123456789ABCDEF")
+        self.vocab = vocab
+        self.char2idx = {char: idx for idx, char in enumerate(vocab)}
+        self.idx2char = {idx: char for idx, char in enumerate(vocab)}
+        self.pad_token_id = self.char2idx["<pad>"]
 
+    def _tokenize(self, text):
+        return list(text)
 
-# Hexadecimal characters 
-hex_chars = '0123456789ABCDEF'
-hex_vocab = sorted(set(hex_chars))
-hex_vocab.append('<SOS>')
-hex_vocab.append('<EOS>')
-hex_vocab.append('<PAD>')
-hex_vocab.append('<UNK>')
-hex_char_to_index = {char: idx for idx, char in enumerate(hex_vocab)}
-hex_index_to_char = {idx: char for idx, char in enumerate(hex_vocab)}
+    def _convert_token_to_id(self, token):
+        return self.char2idx.get(token, self.char2idx["<unk>"])
 
+    def _convert_id_to_token(self, index):
+        return self.idx2char.get(index, "<unk>")
 
-# Decimal characters
-dec_chars = '0123456789'
-dec_vocab = sorted(set(dec_chars))
-dec_vocab.append('<SOS>')
-dec_vocab.append('<EOS>')
-dec_vocab.append('<PAD>')
-dec_vocab.append('<UNK>')
-dec_char_to_index = {char: idx for idx, char in enumerate(dec_vocab)}
-dec_index_to_char = {idx: char for idx, char in enumerate(dec_vocab)}
+    def hex_pad_sequence(self, sequence, max_length, padding_value='<pad>', SOS_value='<bos>', EOS_value='<eos>'):
+        padding_value_id = self.char2idx[padding_value]
+        SOS_value_id = self.char2idx[SOS_value]
+        EOS_value_id = self.char2idx[EOS_value]
 
+        padding_length = max_length - len(sequence) - 2
+        return [SOS_value_id] + sequence + [EOS_value_id] + [padding_value_id] * padding_length
 
-def hex_encode(input_string):
-    return [hex_char_to_index[char] for char in input_string]
+    def dec_pad_sequence(self, sequence, max_length, padding_value='<pad>', SOS_value='<bos>'):
+        padding_value_id = self.char2idx[padding_value]
+        SOS_value_id = self.char2idx[SOS_value]
 
-def dec_encode(input_string):
-    return [dec_char_to_index[char] for char in input_string]
+        padding_length = max_length - len(sequence) - 1
+        return [SOS_value_id] + sequence + [padding_value_id] * padding_length
 
-def hex_pad_sequence(sequence, max_length, padding_value='<PAD>', SOS_value = '<SOS>', EOS_value = '<EOS>'):
-    padding_length = max_length - len(sequence) - 2
-    return [hex_char_to_index[SOS_value]] + sequence + [hex_char_to_index[EOS_value]] + [hex_char_to_index[padding_value]] * padding_length
+    def label_pad_sequence(self, sequence, max_length, padding_value='<pad>', EOS_value='<eos>'):
+        padding_value_id = self.char2idx[padding_value]
+        EOS_value_id = self.char2idx[EOS_value]
 
-def dec_pad_sequence(sequence, max_length, padding_value='<PAD>', SOS_value = '<SOS>'):
-    padding_length = max_length - len(sequence) -  1
-    return [dec_char_to_index[SOS_value]] + sequence  + [dec_char_to_index[padding_value]] * padding_length
+        padding_length = max_length - len(sequence) - 1
+        return sequence + [EOS_value_id] + [padding_value_id] * padding_length
 
-def label_pad_sequence(sequence, max_length, padding_value='<PAD>', EOS_value = '<EOS>'):
-    padding_length = max_length - len(sequence) -  1
-    return sequence  + [dec_char_to_index[EOS_value]] + [dec_char_to_index[padding_value]] * padding_length
-
-def dec_decode(indices):
-    """
-    Decodes a tensor or NumPy array of indices into a string.
-    """
-    dec_index_to_char = {v: k for k, v in dec_char_to_index.items()}  # Assuming dec_char_to_index is the reverse mapping
-    
-    if isinstance(indices, torch.Tensor):
-        indices = indices.cpu().numpy()  # Convert tensor to numpy array if needed
-    
-    decoded_chars = [dec_index_to_char.get(idx, '<UNK>') for idx in indices.flatten()]
-    
-    # Handle cases where indices are in a 2D array or more dimensions
-    decoded_string = ''.join(decoded_chars)
-    
-    return decoded_string
-
+    def decode(self, token_ids, skip_special_tokens=True):
+        tokens = [self._convert_id_to_token(idx) for idx in token_ids]
+        if skip_special_tokens:
+            tokens = [token for token in tokens if token not in ["<pad>", "<eos>", "<bos>", "<unk>"]]
+        return "".join(tokens)
