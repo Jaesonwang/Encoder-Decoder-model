@@ -29,7 +29,7 @@ def create_csv(data, filename = "data.csv"):    #create the csv file to store da
 
 
 if __name__ == "__main__":                      #run the data.py file
-    num_samples = 1000                          #controls the amount of data generated
+    num_samples = 10000                 #controls the amount of data generated
     data = generate_data(num_samples)
     create_csv(data)
     print(f"Generated {num_samples} samples and saved to 'data.csv'")

@@ -1,0 +1,10 @@
+{
+  "version": "0.2.1",
+  "tasks": [
+    {
+      "taskLabel": "task-train_new",
+      "appliesTo": "train_new.py",
+      "type": "launch"
+    }
+  ]
+}

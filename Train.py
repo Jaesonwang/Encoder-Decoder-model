@@ -248,6 +248,8 @@ def validation_step(model, val_dataset, tgt_tokenizer, device, num_step):
     predicted = []
     example_num = 0
     num_examples = 2
+    matching_chars = 0
+    total_chars = 0
 
     with torch.no_grad():
         for batch in val_dataset:
@@ -279,7 +281,12 @@ def validation_step(model, val_dataset, tgt_tokenizer, device, num_step):
     #only calculates the printed ones so pretty useless
     #should change to checking characters
 
-    accuracy = sum(p == e for p, e in zip(predicted, expected)) / len(expected)
+    for pred, exp in zip(predicted, expected):
+        min_len = min(len(pred), len(exp))
+        total_chars += min_len
+        matching_chars += sum(1 for p, e in zip(pred, exp) if p == e)
+
+    accuracy = matching_chars / total_chars
     writer.add_scalar('validation/accuracy', accuracy, num_step)
     print(f"Validation accuracy: {accuracy:.3f}")
     print('-'*get_console_width())
