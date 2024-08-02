@@ -276,10 +276,6 @@ def validation_step(model, val_dataset, tgt_tokenizer, device, num_step):
             if example_num == num_examples:
                 print('-'*get_console_width())
                 break
-    
-    #accuracy = amount of predicted strings that matches the expected strings divided by total amount 
-    #only calculates the printed ones so pretty useless
-    #should change to checking characters
 
     for pred, exp in zip(predicted, expected):
         min_len = min(len(pred), len(exp))
