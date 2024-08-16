@@ -74,8 +74,13 @@ def preload_model(model, optimizer):
     latest_epoch = find_latest_checkpoint(ModelConfig.weight_folder, ModelConfig.weight_file_name_base)
     
     if latest_epoch is not None:
-        print(f'Resuming training at Epoch {(latest_epoch + 1):02d}')
-        ModelConfig.preload = latest_epoch 
+        if latest_epoch == ModelConfig.num_epochs:
+            print(f"Maximum epochs reached in {ModelConfig.weight_folder} folder.")
+            print("You may delete the weights folder or rename it to something else to retrain the model from scratch.")
+            return -1, -1
+        else:    
+            print(f'Resuming training at Epoch {(latest_epoch + 1):02d}')
+            ModelConfig.preload = latest_epoch 
 
     if ModelConfig.preload:
         model_filename = get_weights_file_path(f"{ModelConfig.preload:02d}")
@@ -237,7 +242,7 @@ def greedy_decode(model, source, source_mask, device, tgt_sos_token_id, tgt_eos_
 
     return decoder_input.squeeze(0)
 
-def validation_step(model, val_dataset, tgt_tokenizer, device, num_step):
+def validation_step(model, val_dataset, tgt_tokenizer, device, num_step, writer):
     model.eval()
 
     sos_token_id = tgt_tokenizer._convert_token_to_id('<bos>')
@@ -310,6 +315,10 @@ def train():
     #Preload model with pretrained weights if any, else start from scratch
     initial_epoch, num_step = preload_model(model, optimizer)
 
+    #Break out of program if max epochs are reached in pretrained weights file
+    if initial_epoch == -1:
+        return
+
     #cross entropy loss
     loss_fn = nn.CrossEntropyLoss(ignore_index=src_tokenizer.pad_token_id, label_smoothing=0.1).to(device)
 
@@ -323,7 +332,7 @@ def train():
         batch_iterator = tqdm(train_dataloader, desc=f"Processing Epoch {(epoch + 1):02d}")
         
         run_training_loop(model, device, loss_fn, tgt_tokenizer, optimizer, num_step, batch_iterator, writer)
-        validation_step(model, val_dataloader, tgt_tokenizer, device, num_step)
+        validation_step(model, val_dataloader, tgt_tokenizer, device, num_step, writer)
 
         model_filename = get_weights_file_path(f"{(epoch + 1):02d}")
         torch.save({
@@ -333,6 +342,8 @@ def train():
             'num_step': num_step
         }, model_filename)
 
+    writer.close()
+
 #-------------------------------------------------------------------------------------------------------------------------------
 
 #Runs this when calling file
@@ -340,9 +351,5 @@ def train():
 if __name__ == '__main__':
     warnings.filterwarnings("ignore")
     ModelConfig.preload = None
-
-    # Initialize TensorBoard writer
-    writer = SummaryWriter(log_dir=ModelConfig.experiment_name)
     
     train()
-    writer.close()
