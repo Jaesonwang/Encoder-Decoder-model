@@ -40,8 +40,6 @@ class ModelConfig:
 
 def get_weights_file_path(epoch):
     weight_folder_path = Path('.') / ModelConfig.weight_folder
-    # if not weight_folder_path.exists():
-    #     weight_folder_path.mkdir(parents=True, exist_ok=True)
     return str(weight_folder_path / f"{ModelConfig.weight_file_name_base}{epoch}.pt")
 
 def get_console_width():
@@ -191,28 +189,22 @@ def run_training_loop(model, device, loss_fn, tgt_tokenizer, optimizer, num_step
     
     for batch in batch_iterator:
         
-        #Encoder Processes
         encoder_input = batch['encoder_input'].to(device)
         encoder_mask = batch['encoder_mask'].to(device)
         encoder_output = model.encode(encoder_input, encoder_mask)
         
-        #Decoder Process
         decoder_input = batch['decoder_input'].to(device)
         decoder_mask = batch['decoder_mask'].to(device)
         decoder_output = model.decode(encoder_output, encoder_mask, decoder_input, decoder_mask)
 
-        #Project decoder Outputs
         proj_output = model.project(decoder_output)
 
-        #Compare projected outputs to expected outputs
         label = batch['label'].to(device)
         loss = loss_fn(proj_output.view(-1, len(tgt_tokenizer.vocab)), label.view(-1))
         batch_iterator.set_postfix({"loss": f"{loss.item():6.3f}"})
 
-        # Log to TensorBoard
         writer.add_scalar('train/loss', loss.item(), num_step)
         
-        #Backward propagation and update weights
         loss.backward()
         optimizer.step()
         optimizer.zero_grad(set_to_none=True)
@@ -265,7 +257,6 @@ def validation_step(model, val_dataset, tgt_tokenizer, device, num_step, writer)
             source.append(source_text)
             expected.append(target_text)
             
-            #Get decoded output from greedy decode
             encoder_input = batch["encoder_input"].to(device)
             encoder_mask = batch["encoder_mask"].to(device) 
             model_out = greedy_decode(model, encoder_input, encoder_mask, device, sos_token_id, eos_token_id)
