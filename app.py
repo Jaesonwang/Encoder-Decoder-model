@@ -28,7 +28,7 @@ app.layout = html.Div([
                   style={'margin-bottom': '20px', 'width': '300px'}),
         html.Button('Submit', id='submit-button', n_clicks=0),
         html.Div(id='output')
-    ], style={'display': 'flex', 'flex-direction': 'column', 'align-items': 'center', 'justify-content': 'center'}),
+    ], style={'display': 'flex', 'flex-direction': 'column', 'align-items': 'center', 'justify-content': 'center', 'marginBottom': 25}),
     
     html.Div([
         dash_table.DataTable(
@@ -39,9 +39,13 @@ app.layout = html.Div([
                      {'name': 'Expected Value', 'id': 'expected_output'},
                      {'name': 'Accuracy', 'id': 'accuracy'}
                      ],
-            data=[]
+            data=[],
+            style_cell={
+            'textAlign': 'center',  
+            'padding': '10px',      
+        },
         )
-    ], style={'display': 'flex', 'flex-direction': 'column', 'align-items': 'center', 'justify-content': 'center'})
+    ], style={'display': 'flex', 'flex-direction': 'column', 'align-items': 'center', 'justify-content': 'center', 'marginBottom': 25})
 ])
 
 # Add callback for the interaction
