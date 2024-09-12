@@ -1,16 +1,114 @@
-import time
-from flask import Flask, render_template, request
+import dash
+from dash import dcc, html, Dash
+from dash.dependencies import Input, Output, State
+from dash import dash_table
+from converter import HexToDecConverter
 
-app = Flask(__name__)
+# Initialize the app
+app = Dash()
 
-@app.route('/')
-def home():
-    return 'Hello, World!'
+user_inputs = []
+translated_outputs = []
+expected_outputs = []
+accuracy = []
 
-if __name__ == "__main__":
-    print("Starting Flask app...")
-    app.run(host='0.0.0.0', port=5000)
-    while True:
-        time.sleep(10)
+# App layout
+app.layout = html.Div([
+    html.Div([
+        html.Div('Welcome to the hexadecimal to decimal translation tool!', 
+                 style={'color': 'black', 'fontSize': 20, 'text-align': 'center'}),
+        html.P('Please enter your hexadecimal value: ', 
+               className='my-class', 
+               id='my-p-element', 
+               style={'color': 'black', 'fontSize': 20, 'text-align': 'center'})
+    ], style={'marginBottom': 50, 'marginTop': 25}),
+    
+    html.Div([
+        dcc.Input(id='input-box', type='text', value='', 
+                  style={'margin-bottom': '20px', 'width': '300px'}),
+        html.Button('Submit', id='submit-button', n_clicks=0),
+        html.Div(id='output')
+    ], style={'display': 'flex', 'flex-direction': 'column', 'align-items': 'center', 'justify-content': 'center'}),
+    
+    html.Div([
+        dash_table.DataTable(
+            id='input-table', 
+            columns=[{'name': 'Submission Number', 'id': 'number'}, 
+                     {'name': 'Input Value', 'id': 'input'},
+                     {'name': 'Translated Value', 'id': 'translated_output'},
+                     {'name': 'Expected Value', 'id': 'expected_output'},
+                     {'name': 'Accuracy', 'id': 'accuracy'}
+                     ],
+            data=[]
+        )
+    ], style={'display': 'flex', 'flex-direction': 'column', 'align-items': 'center', 'justify-content': 'center'})
+])
 
-    print("Flask app stopped.")
+# Add callback for the interaction
+@app.callback(
+    [Output('output', 'children'),
+     Output('input-table', 'data')],
+    [Input('submit-button', 'n_clicks')],
+    [State('input-box', 'value')]
+)
+def update_output(n_clicks, value):
+    if n_clicks > 0 and value:  # Check if there's a valid input
+    
+        try:
+            # Initialize converter and attempt to convert
+            converter = HexToDecConverter()
+            translated_value = converter.convert_hex_to_dec(value)
+
+            # Use Python's built-in int function to validate the expected value
+            expected_value = str(int(value, 16))
+
+            # Add the input value to the list of user inputs
+            user_inputs.append(value)
+            translated_outputs.append(translated_value)
+            expected_outputs.append(expected_value)
+
+            total_chars = 0
+            matching_chars = 0
+            
+            for pred, exp in zip(translated_value, expected_value):
+                min_len = min(len(pred), len(exp))
+                total_chars += min_len
+                matching_chars += sum(1 for p, e in zip(pred, exp) if p == e)
+
+            num_accuracy = round(matching_chars/total_chars, 3) * 100
+            str_accuracy = "{:.1f}%".format(num_accuracy)
+            accuracy.append(str_accuracy)
+            # Update the table data
+            table_data = [
+                {
+                    'number': i+1, 
+                    'input': user_input, 
+                    'translated_output': translated_outputs, 
+                    'expected_output': expected_outputs,
+                    'accuracy': accuracy
+                } 
+                for i, (user_input, translated_outputs, expected_outputs, accuracy) in enumerate(zip(user_inputs, translated_outputs, expected_outputs, accuracy))
+            ]
+
+            # Create the output message with the converted value
+            output_message = html.Div([
+                html.P(f"Hexadecimal value: {value}"),
+                html.P(f"Translated decimal value: {translated_value}"),
+                html.P(f"Expected decimal value: {expected_value}")
+            ])
+
+        except ValueError:
+            # Handle invalid hexadecimal input
+            output_message = html.Div([
+                html.P(f"'{value}' is not a valid hexadecimal value.", style={'color': 'red'})
+            ])
+            table_data = []
+
+        return output_message, table_data
+
+    # If no input is provided, return an empty message and table
+    return html.Div(), []
+
+# Run the app
+if __name__ == '__main__':
+    app.run_server(debug=True)
