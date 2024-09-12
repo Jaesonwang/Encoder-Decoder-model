@@ -52,17 +52,13 @@ app.layout = html.Div([
     [State('input-box', 'value')]
 )
 def update_output(n_clicks, value):
-    if n_clicks > 0 and value:  # Check if there's a valid input
+    if n_clicks > 0 and value: 
     
         try:
-            # Initialize converter and attempt to convert
             converter = HexToDecConverter()
             translated_value = converter.convert_hex_to_dec(value)
-
-            # Use Python's built-in int function to validate the expected value
             expected_value = str(int(value, 16))
 
-            # Add the input value to the list of user inputs
             user_inputs.append(value)
             translated_outputs.append(translated_value)
             expected_outputs.append(expected_value)
@@ -78,7 +74,7 @@ def update_output(n_clicks, value):
             num_accuracy = round(matching_chars/total_chars, 3) * 100
             str_accuracy = "{:.1f}%".format(num_accuracy)
             accuracy.append(str_accuracy)
-            # Update the table data
+
             table_data = [
                 {
                     'number': i+1, 
@@ -90,7 +86,6 @@ def update_output(n_clicks, value):
                 for i, (user_input, translated_outputs, expected_outputs, accuracy) in enumerate(zip(user_inputs, translated_outputs, expected_outputs, accuracy))
             ]
 
-            # Create the output message with the converted value
             output_message = html.Div([
                 html.P(f"Hexadecimal value: {value}"),
                 html.P(f"Translated decimal value: {translated_value}"),
@@ -98,7 +93,6 @@ def update_output(n_clicks, value):
             ])
 
         except ValueError:
-            # Handle invalid hexadecimal input
             output_message = html.Div([
                 html.P(f"'{value}' is not a valid hexadecimal value.", style={'color': 'red'})
             ])
@@ -106,7 +100,6 @@ def update_output(n_clicks, value):
 
         return output_message, table_data
 
-    # If no input is provided, return an empty message and table
     return html.Div(), []
 
 # Run the app
