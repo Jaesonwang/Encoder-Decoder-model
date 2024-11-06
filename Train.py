@@ -23,7 +23,6 @@ class ModelConfig:
     batch_size: int = 12
     num_epochs: int = 20
     learning_rate: float = 1e-3
-    sequence_length: int = 15
     max_length: int = 15
     d_model: int = 128
     num_heads: int = 4
@@ -178,7 +177,7 @@ def get_data_and_tokenizer():
 #Build the transformer 
 
 def encoder_decoder(src_vocab_length, tgt_vocab_length):
-    model = transformer_model(src_vocab_length, tgt_vocab_length, ModelConfig.sequence_length, ModelConfig.sequence_length, ModelConfig.d_model)
+    model = transformer_model(src_vocab_length, tgt_vocab_length, ModelConfig.max_length, ModelConfig.max_length, ModelConfig.d_model)
     return model
 
 #-------------------------------------------------------------------------------------------------------------------------------
