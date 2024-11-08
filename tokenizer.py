@@ -18,20 +18,20 @@ class CharTokenizer:
     def _convert_id_to_token(self, index):
         return self.idx2char.get(index, "<unk>")
 
-    def hex_pad_sequence(self, sequence, max_length, padding_value='<pad>', SOS_value='<bos>', EOS_value='<eos>'):
+    def hex_pad_sequence(self, sequence, max_length, padding_value='<pad>', BOS_value='<bos>', EOS_value='<eos>'):
         padding_value_id = self.char2idx[padding_value]
-        SOS_value_id = self.char2idx[SOS_value]
+        BOS_value_id = self.char2idx[BOS_value]
         EOS_value_id = self.char2idx[EOS_value]
 
         padding_length = max_length - len(sequence) - 2
-        return [SOS_value_id] + sequence + [EOS_value_id] + [padding_value_id] * padding_length
+        return [BOS_value_id] + sequence + [EOS_value_id] + [padding_value_id] * padding_length
 
-    def dec_pad_sequence(self, sequence, max_length, padding_value='<pad>', SOS_value='<bos>'):
+    def dec_pad_sequence(self, sequence, max_length, padding_value='<pad>', BOS_value='<bos>'):
         padding_value_id = self.char2idx[padding_value]
-        SOS_value_id = self.char2idx[SOS_value]
+        BOS_value_id = self.char2idx[BOS_value]
 
         padding_length = max_length - len(sequence) - 1
-        return [SOS_value_id] + sequence + [padding_value_id] * padding_length
+        return [BOS_value_id] + sequence + [padding_value_id] * padding_length
 
     def label_pad_sequence(self, sequence, max_length, padding_value='<pad>', EOS_value='<eos>'):
         padding_value_id = self.char2idx[padding_value]
