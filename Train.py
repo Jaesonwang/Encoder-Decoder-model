@@ -233,7 +233,7 @@ def greedy_decode(model, source, source_mask, device, tgt_sos_token_id, tgt_eos_
 
     return decoder_input.squeeze(0)
 
-def validation_step(model, val_dataset, tgt_tokenizer, device, num_step, writer):
+def testing_step(model, val_dataset, tgt_tokenizer, device, num_step, writer):
     model.eval()
 
     sos_token_id = tgt_tokenizer._convert_token_to_id('<bos>')
@@ -278,13 +278,13 @@ def validation_step(model, val_dataset, tgt_tokenizer, device, num_step, writer)
         matching_chars += sum(1 for p, e in zip(pred, exp) if p == e)
 
     accuracy = matching_chars / total_chars
-    writer.add_scalar('validation/accuracy', accuracy, num_step)
-    print(f"Validation accuracy: {accuracy:.3f}")
+    writer.add_scalar('testing/accuracy', accuracy, num_step)
+    print(f"Testing accuracy: {accuracy:.3f}")
     print('-'*get_console_width())
 
     metric = BLEUScore()
     bleu = metric(predicted, expected)
-    writer.add_scalar('validation/bleu', bleu, num_step)
+    writer.add_scalar('testing/bleu', bleu, num_step)
 
 #-------------------------------------------------------------------------------------------------------------------------------
 
@@ -322,7 +322,7 @@ def train():
         batch_iterator = tqdm(train_dataloader, desc=f"Processing Epoch {(epoch + 1):02d}")
         
         run_training_loop(model, device, loss_fn, tgt_tokenizer, optimizer, num_step, batch_iterator, writer)
-        validation_step(model, val_dataloader, tgt_tokenizer, device, num_step, writer)
+        testing_step(model, val_dataloader, tgt_tokenizer, device, num_step, writer)
 
         model_filename = get_weights_file_path(f"{(epoch + 1):02d}")
         torch.save({
