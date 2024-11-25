@@ -164,13 +164,13 @@ def get_data_and_tokenizer():
     dataset = HexDecDataset('data.csv', src_tokenizer, tgt_tokenizer, ModelConfig.max_length)
 
     train_data_size = int(0.9 * len(dataset))
-    val_data_size = int(0.1 * len(dataset))
-    train_ds, val_ds = random_split(dataset, [train_data_size, val_data_size])
+    test_data_size = int(0.1 * len(dataset))
+    train_ds, test_ds = random_split(dataset, [train_data_size, test_data_size])
 
     train_dataloader = DataLoader(train_ds, batch_size=ModelConfig.batch_size, shuffle=True, collate_fn=collate_fn)
-    val_dataloader = DataLoader(val_ds, batch_size=1, shuffle=True, collate_fn=collate_fn)
+    test_dataloader = DataLoader(test_ds, batch_size=1, shuffle=True, collate_fn=collate_fn)
 
-    return train_dataloader, val_dataloader, src_tokenizer, tgt_tokenizer
+    return train_dataloader, test_dataloader, src_tokenizer, tgt_tokenizer
 
 #-------------------------------------------------------------------------------------------------------------------------------
 
@@ -233,7 +233,7 @@ def greedy_decode(model, source, source_mask, device, tgt_sos_token_id, tgt_eos_
 
     return decoder_input.squeeze(0)
 
-def testing_step(model, val_dataset, tgt_tokenizer, device, num_step, writer):
+def testing_step(model, test_dataset, tgt_tokenizer, device, num_step, writer):
     model.eval()
 
     sos_token_id = tgt_tokenizer._convert_token_to_id('<bos>')
@@ -248,7 +248,7 @@ def testing_step(model, val_dataset, tgt_tokenizer, device, num_step, writer):
     total_chars = 0
 
     with torch.no_grad():
-        for batch in val_dataset:
+        for batch in test_dataset:
             example_num += 1
 
             source_text = batch["src_value"][0]
@@ -296,7 +296,7 @@ def train():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     #Get data, tokenizer and model
-    train_dataloader, val_dataloader, src_tokenizer, tgt_tokenizer = get_data_and_tokenizer()
+    train_dataloader, test_dataloader, src_tokenizer, tgt_tokenizer = get_data_and_tokenizer()
     model = encoder_decoder(len(src_tokenizer.vocab), len(tgt_tokenizer.vocab)).to(device)
 
     #Get optimizer
@@ -322,7 +322,7 @@ def train():
         batch_iterator = tqdm(train_dataloader, desc=f"Processing Epoch {(epoch + 1):02d}")
         
         run_training_loop(model, device, loss_fn, tgt_tokenizer, optimizer, num_step, batch_iterator, writer)
-        testing_step(model, val_dataloader, tgt_tokenizer, device, num_step, writer)
+        testing_step(model, test_dataloader, tgt_tokenizer, device, num_step, writer)
 
         model_filename = get_weights_file_path(f"{(epoch + 1):02d}")
         torch.save({
