@@ -24,7 +24,7 @@ class HexToDecConverter:
                 state = torch.load(model_filename, map_location=torch.device('cpu'))
             self.model.load_state_dict(state['model_state_dict'])
 
-    def beam_search(self, model, source, source_mask, device, bos_token_id, eos_token_id, beam_width=10):
+    def beam_search(self, model, source, source_mask, device, bos_token_id, eos_token_id, beam_width=3):
         encoder_output = model.encode(source, source_mask)
         beam = [(torch.tensor([[bos_token_id]], device=device), 0.0)]
         
