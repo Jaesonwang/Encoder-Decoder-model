@@ -38,42 +38,7 @@ class PositionalEncodingLayer(nn.Module):
     def forward(self, x):
         x = x + (self.pe[:, :x.shape[1], :]).requires_grad_(False)
         return self.dropout(x)
-
-class LayerNorm(nn.Module):  
-
-    def __init__(self, features, eps = 10**-6) -> None:
-        super().__init__()
-        self.eps = eps
-        self.alpha = nn.Parameter(torch.ones(features)) 
-        self.bias = nn.Parameter(torch.zeros(features))
-
-    def forward(self, x):
-        mean = x.mean(dim = -1, keepdim = True) 
-        std = x.std(dim = -1, keepdim = True)
-        return self.alpha * (x - mean) / (std + self.eps) + self.bias
-
-class FeedForwardBlock(nn.Module): 
-
-    def __init__(self, d_model, d_ff, dropout) -> None:
-        super().__init__()
-        self.linear_1 = nn.Linear(d_model, d_ff) 
-        self.dropout = nn.Dropout(dropout)
-        self.linear_2 = nn.Linear(d_ff, d_model) 
-
-    def forward(self, x):
-        
-        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
-
-class ResidualConnection(nn.Module):
     
-        def __init__(self, features, dropout) -> None:
-            super().__init__()
-            self.dropout = nn.Dropout(dropout)
-            self.norm = LayerNorm(features)
-    
-        def forward(self, x, sublayer):
-            return x + self.dropout(sublayer(self.norm(x)))
-
 class MultiHeadAttentionBlock(nn.Module):
 
     def __init__(self, d_model, h, dropout) -> None:
@@ -116,6 +81,41 @@ class MultiHeadAttentionBlock(nn.Module):
         x = x.transpose(1, 2).contiguous().view(x.shape[0], -1, self.h * self.d_k)
 
         return self.w_o(x)
+
+class LayerNorm(nn.Module):  
+
+    def __init__(self, features, eps = 10**-6) -> None:
+        super().__init__()
+        self.eps = eps
+        self.alpha = nn.Parameter(torch.ones(features)) 
+        self.bias = nn.Parameter(torch.zeros(features))
+
+    def forward(self, x):
+        mean = x.mean(dim = -1, keepdim = True) 
+        std = x.std(dim = -1, keepdim = True)
+        return self.alpha * (x - mean) / (std + self.eps) + self.bias
+
+class FeedForwardBlock(nn.Module): 
+
+    def __init__(self, d_model, d_ff, dropout) -> None:
+        super().__init__()
+        self.linear_1 = nn.Linear(d_model, d_ff) 
+        self.dropout = nn.Dropout(dropout)
+        self.linear_2 = nn.Linear(d_ff, d_model) 
+
+    def forward(self, x):
+        
+        return self.linear_2(self.dropout(torch.relu(self.linear_1(x))))
+
+class ResidualConnection(nn.Module):
+    
+        def __init__(self, features, dropout) -> None:
+            super().__init__()
+            self.dropout = nn.Dropout(dropout)
+            self.norm = LayerNorm(features)
+    
+        def forward(self, x, sublayer):
+            return x + self.dropout(sublayer(self.norm(x)))
     
 class ProjectionLayer(nn.Module):
 
