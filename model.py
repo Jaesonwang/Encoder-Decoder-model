@@ -214,14 +214,14 @@ class TransformerFunctions(nn.Module):
 
 def transformer_model(src_vocab_size, tgt_vocab_size, src_sequence_length, tgt_sequence_length, d_model = 128, num_layers = 4, num_heads = 4, dropout = 0.1, d_ff = 512) -> TransformerFunctions:
     
+    encoder = Encoder(d_model, num_layers, num_heads, d_ff, dropout)
+    decoder = Decoder(d_model, num_layers, num_heads, d_ff, dropout)    
+    
     src_embd = InputEmbeddingLayer(d_model, src_vocab_size)
     tgt_embd = InputEmbeddingLayer(d_model, tgt_vocab_size)
     src_pos = PositionalEncodingLayer(d_model, src_sequence_length, dropout)
     tgt_pos = PositionalEncodingLayer(d_model, tgt_sequence_length, dropout)
-
-    encoder = Encoder(d_model, num_layers, num_heads, d_ff, dropout)
-    decoder = Decoder(d_model, num_layers, num_heads, d_ff, dropout)    
-
+    
     projection_layer = ProjectionLayer(d_model, tgt_vocab_size)
 
     transformer = TransformerFunctions(encoder, decoder, src_embd, tgt_embd, src_pos, tgt_pos, projection_layer)
