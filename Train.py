@@ -292,30 +292,21 @@ def testing_step(model, test_dataset, tgt_tokenizer, device, num_step, writer):
 
 def train():
 
-    #Looks for CUDA, else use CPU
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    #Get data, tokenizer and model
     train_dataloader, test_dataloader, src_tokenizer, tgt_tokenizer = get_data_and_tokenizer()
     model = encoder_decoder(len(src_tokenizer.vocab), len(tgt_tokenizer.vocab)).to(device)
-
-    #Get optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=ModelConfig.learning_rate, eps=1e-9)
 
-    #Preload model with pretrained weights if any, else start from scratch
     initial_epoch, num_step = preload_model(model, optimizer)
 
-    #Break out of program if max epochs are reached in pretrained weights file
     if initial_epoch == -1:
         return
 
-    #cross entropy loss
     loss_fn = nn.CrossEntropyLoss(ignore_index=src_tokenizer.pad_token_id, label_smoothing=0.1).to(device)
 
-    #tensorboard for logging
     writer = SummaryWriter(log_dir=ModelConfig.experiment_name)
     
-    #Epoch loop
     for epoch in range(initial_epoch, ModelConfig.num_epochs):
         torch.cuda.empty_cache()
         model.train()
