@@ -182,7 +182,7 @@ def encoder_decoder(src_vocab_length, tgt_vocab_length):
 
 #-------------------------------------------------------------------------------------------------------------------------------
 
-#Functions to train and validate model
+#Functions to train and test model
 
 def run_training_loop(model, device, loss_fn, tgt_tokenizer, optimizer, num_step, batch_iterator, writer):
     
