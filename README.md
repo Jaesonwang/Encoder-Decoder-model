@@ -1,6 +1,26 @@
 # Encoder/Decoder Transformer Model
 Allow translation between hexadecimal and decimal numbers
 
+### To modify the dataset:
+Edit line 27 in the generate_data.py file to adjust the number of data points you would like to use to train the model.
+Edit line 11 to edit the length of the hexadecimal values in the dataset (default set to be between 1-8)
+
+### To edit any model parameters:
+Edit the ModelConfig class in Train.py to modify any parameters to your liking (line 22)
+
+### To run the train loop:
+Simply run train.py
+
+### To use the UI
+##### 1. Run app.py
+  Opens up a web page that utilizes plotly-dash
+
+##### 2. Run UI.py
+  Opens up a small desktop application
+  
+
+
+
 
 
 
