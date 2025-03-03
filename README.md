@@ -1,6 +1,9 @@
 # Encoder/Decoder Transformer Model
 Allow translation between hexadecimal and decimal numbers
 
+### Watch this beginner video to get a deeper understanding of how each component was implemented and why it was necessary!
+[![Video Title](https://img.youtube.com/vi/VIDEO_ID/0.jpg)](https://www.youtube.com/watch?v=VIDEO_ID)
+
 ### To modify the dataset:
 Edit line 27 in the generate_data.py file to adjust the number of data points you would like to use to train the model.
 Edit line 11 to edit the length of the hexadecimal values in the dataset (default set to be between 1-8)
